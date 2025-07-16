@@ -84,9 +84,63 @@ public:
         return node;
     }
 
+    int get_random_level() {
+        int k = 1;
+        while (rand() % 2) {
+            k++;
+        }
+        k = (k < max_level) ? k : max_level;
+        return k;
+    }
+
     // 插入元素操作, 返回0表示插入成功, 返回1表示跳表中已有该元素
     int insert_element(const K key, const V value) {
         mtx.lock();
         Node<K, V>* current = this->head;
+
+        Node<K, V>* update[max_level + 1];
+        memset(update, nullptr, sizeof(Node<K, V>*)*(max_level + 1));
+        
+        // 从最高层更新forward
+        for (int i = skip_list_level; i >= 0; --i) {
+            while (current->forward[i] != nullptr && current->forward[i]->get_key() < key) {
+                current = current->forward[i];
+            }
+            update[i] = current;
+        }
+
+        // 更新current
+        current = current->forward[0];
+        // 跳表中已存在key
+        if (current != nullptr && current->get_key() == key) {
+            std::cout << "key: " << key << ", exist" << std::endl;
+            mtx.unlock();
+            return 1;
+        }
+
+        if (current == nullptr || current->get_key() != key) {
+            int random_level == get_random_level();
+
+            // 获得到的随机层级大于调表目前的层级, 则初始化head
+            if (random_level >skip_list_level) {
+                for (int i = skip_list_level + 1; i < random_level + 1; ++i) {
+                    update[i] = head;
+                }
+                skip_list_level = random_level;
+            }
+
+            // 用随机层级初始化新结点
+            Node<K, V>* inserted_node = create_node(key, value, random_level);
+
+            // 插入结点
+            for (int i = 0; i <= random_level; ++i) {
+                inserted_node->forward[i] = update[i]->forward[i];
+                update[i]->forward[i] = inserted_node;
+            }
+            std::cout << "Successfully inserted key: " << key << ", value: " << value << std::endl;
+            element_count++;
+        }
+        mtx.unlock()
+        return 0;
     }
 };
