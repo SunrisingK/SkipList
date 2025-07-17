@@ -72,16 +72,41 @@ private:
         *value = str.substr(str.find(delimiter) + 1, str.size());
     }
 
+
     bool is_valid_string(const std::string& str) {
         return !str.empty() && str.find(delimiter) != std::string::npos;
     }
 
 public:
-    SkipList();
+    SkipList(int max_level): max_level(max_level), skip_list_level(0), element_count(0) {
+        K key;
+        V value;
+        head = new Node<K, V>(key, value, max_level);
+    }
 
-    Node<K, V>* create_node(const K key, const V value, int level) {
-        Node<K, V>* node = new Node<K, V>(key, value, level);
-        return node;
+    ~SkipList() {
+        if (_file_writer.is_open()) {
+            _file_writer.close();
+        }
+        if (_file_reader.is_open()) {
+            _file_reader.close();
+        }
+        // 递归删除跳表链条
+        if (head->forward[0] != nullptr) {
+            clear(head->forward[0]);
+        }
+        delete head;
+    }
+
+    void clear(Node<K, V>* cur) {
+        if (cur->forward[0] != nullptr) {
+            clear(cur->forward[0]);
+        }
+        delete cur;
+    }
+
+    int size() {
+        return element_count;
     }
 
     int get_random_level() {
@@ -91,6 +116,11 @@ public:
         }
         k = (k < max_level) ? k : max_level;
         return k;
+    }
+
+    Node<K, V>* create_node(const K key, const V value, int level) {
+        Node<K, V>* node = new Node<K, V>(key, value, level);
+        return node;
     }
 
     // 插入元素操作, 返回0表示插入成功, 返回1表示跳表中已有该元素
@@ -137,10 +167,83 @@ public:
                 inserted_node->forward[i] = update[i]->forward[i];
                 update[i]->forward[i] = inserted_node;
             }
-            std::cout << "Successfully inserted key: " << key << ", value: " << value << std::endl;
+            std::cout << "Successfully insert key: " << key << ", value: " << value << std::endl;
             element_count++;
         }
         mtx.unlock()
         return 0;
+    }
+
+    // 删除结点key
+    void delete_element(K key) {
+        mtx;lock();
+        Node<K, V>* current = this->head;
+        Node<K, V>* update[max_level + 1];
+        memset(update, nullptr, sizeof(Node<K, V>*)*(max_level + 1));
+
+        // 从最高层开始更新
+        for (int i = skip_list_level; i >= 0; --i) {
+            while (current->forward[i] != nullptr && current->forward[i]->get_key < key) {
+                current = current->forward[i];
+            }
+            update[i] = current;
+        }
+
+        current = current->forward[0];
+        if (current != nullptr && current->get_key() == key) {
+            // 从最低点开始删除结点
+            for (int i = 0; i <= skip_list_level; ++i) {
+                // 第 i 层已经没有待删除结点了直接退出
+                if (update[i]->forword[i] != current) break;
+                update[i]->forward[i] = current->forward[i];
+            }
+
+            // 删除没有元素的层
+            while (skip_list_level > 0 && head->forward[skip_list_level] == 0) {
+                --skip_list_level;
+            }
+
+            std::cout << "Successfully delete key " << key << std::endl;
+            delete current;
+            element_count--;
+        }
+        mtx.unlock();
+    }
+
+    bool search_element(K key) {
+        std::cout << "search_element-------------------------------------------------\n";
+        Node<K, V>* current = head;
+        bool res = false;
+
+        for (int i = skip_list_level; i >= 0; --i) {
+            while (current->forward[i] && current->forward[i]->get_key() < key) {
+                current = current->forward[i];
+            }
+        }
+
+        current = current->forward[0];
+        if (current && current->get_key() == key) {
+            std::cout<< "Find key: " << key << ", value: " << current->get_value() << std::endl;
+            res = true;
+        }
+        else {
+            std::cout << "No key: " << key << " in the skip list" << std::endl; 
+        }
+
+        return res;
+    }
+
+    void display_list() {
+        std::cout << "\n************************* Skip List *************************\n";
+
+        for (int i = 0; i <= skip_list_level; ++i) {
+            Node<K, V>* node = this->head->forward[i];
+            std::cout << "Level " << i << ": ";
+            while (node != nullptr) {
+                std::cout << node->get_key() << ":" << node->get_value() << ";";
+                node = node->forward[i];
+            }
+            std::cout << std::endl;
+        }
     }
 };
