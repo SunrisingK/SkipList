@@ -246,4 +246,36 @@ public:
             std::cout << std::endl;
         }
     }
+
+    // 文件操作-读取文件
+    void load_file() {
+        _file_reader.open(STORE_FILE);
+        std::cout << "load file------------------------------------------------------" << std::endl;
+        std::string line;
+        std::string* key = new std::string();
+        std::string* value = new std::string();
+        while (getline(_file_reader, line)) {
+            get_key_value_from_string(line, key, value);
+            if (key->empty() || value->empty()) continue;
+            insert_element(stoi(*key), *value);
+            std::cout << "key: " << *key << " value: " << *value << std::endl; 
+        }
+        delete key;
+        delete value;
+        _file_reader.close();
+    }
+
+    // 文件操作-写入文件
+    void dump_file() {
+        _file_writer.open(STORE_FILE);
+        std::cout << "dump file------------------------------------------------------" << std::endl;
+        Node<K, V>* node = this->head->forward[0];
+        while (node != nullptr) {
+            _file_writer << node->get_key() << delimiter << node->get_value() << std::endl;
+            std::cout << node->get_key() << delimiter << node->get_value() << std::endl;
+            node = node->forward[0];
+        }
+        _file_writer.flush();
+        _file_writer.close();
+    }
 };
