@@ -13,5 +13,5 @@ install(TARGETS ${PROJECT_NAME})
 add_executable(${PROJECT_NAME}_exe src/main.cpp)
 target_link_libraries(${PROJECT_NAME}_exe ${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME}_test test/stress_test.cc)
+add_executable(${PROJECT_NAME}_test test/stress_test.cpp)
 target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} pthread)

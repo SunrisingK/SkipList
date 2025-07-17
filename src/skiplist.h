@@ -91,18 +91,18 @@ public:
             file_reader.close();
         }
         // 递归删除跳表
-        if (head->forward[0] != nullptr) {
-            clear(head->forward[0]);
-        }
-        delete head;
+        // if (head->forward[0] != nullptr) {
+        //     clear(head->forward[0]);
+        // }
+        // delete head;
     }
 
-    void clear(Node<K, V>* cur) {
-        if (cur->forward[0] != nullptr) {
-            clear(cur->forward[0]);
-        }
-        delete cur;
-    }
+    // void clear(Node<K, V>* cur) {
+    //     if (cur->forward[0] != nullptr) {
+    //         clear(cur->forward[0]);
+    //     }
+    //     delete cur;
+    // }
 
     const int size() const {
         return element_count;
@@ -127,7 +127,7 @@ public:
         std::unique_lock<std::mutex> lock_(mtx);    // 自动加锁，等价于mtx.lock()
         std::shared_ptr<kv_node::Node<K, V>> current = this->head;
 
-        auto update = kv_node::Node<K, V>(max_level + 1);
+        auto update = kv_node::NodeVec<K, V>(max_level + 1);
         
         // 从最高层更新forward
         for (int i = currentt_level; i >= 0; --i) {
@@ -168,7 +168,7 @@ public:
             std::cout << "Successfully insert key: " << key << ", value: " << value << std::endl;
             element_count++;
         }
-        lock_.unlock()
+        lock_.unlock();
         return 0;
     }
 
@@ -192,7 +192,7 @@ public:
             // 从最低点开始删除结点
             for (int i = 0; i <= currentt_level; ++i) {
                 // 第 i 层已经没有待删除结点了直接退出
-                if (update[i]->forword[i] != current) break;
+                if (update[i]->forward[i] != current) break;
                 update[i]->forward[i] = current->forward[i];
             }
 
