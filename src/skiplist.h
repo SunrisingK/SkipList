@@ -52,7 +52,7 @@ template <typename K, typename V>
 class SkipList {
 private:
     int max_level;                                      // 跳表的最大层级
-    int currentt_level;                                 // 跳表当前的层级
+    int current_level;                                 // 跳表当前的层级
 
     std::shared_ptr<kv_node::Node<K, V>> head;          // 头结点指针
 
@@ -79,7 +79,7 @@ private:
     }
 
 public:
-    SkipList(int max_level): max_level(max_level), currentt_level(0), element_count(0) {
+    SkipList(int max_level): max_level(max_level), current_level(0), element_count(0) {
         head = std::make_shared<kv_node::Node<K, V>>(K(), V(), max_level);
     }
 
@@ -130,7 +130,7 @@ public:
         auto update = kv_node::NodeVec<K, V>(max_level + 1);
         
         // 从最高层更新forward
-        for (int i = currentt_level; i >= 0; --i) {
+        for (int i = current_level; i >= 0; --i) {
             while (current->forward[i] != nullptr && current->forward[i]->getKey() < key) {
                 current = current->forward[i];
             }
@@ -150,18 +150,18 @@ public:
             int random_level = getRandomLevel();
 
             // 获得到的随机层级大于调表目前的层级, 则初始化head
-            if (random_level >currentt_level) {
-                for (int i = currentt_level + 1; i < random_level + 1; ++i) {
+            if (random_level >current_level) {
+                for (int i = current_level + 1; i < random_level + 1; ++i) {
                     update[i] = head;
                 }
-                currentt_level = random_level;
+                current_level = random_level;
             }
 
             // 用随机层级初始化新结点
             std::shared_ptr<kv_node::Node<K, V>> inserted_node = createNode(key, value, random_level);
 
             // 插入结点
-            for (int i = 0; i <= random_level; ++i) {
+            for (int i = 0; i < random_level; ++i) {
                 inserted_node->forward[i] = update[i]->forward[i];
                 update[i]->forward[i] = inserted_node;
             }
@@ -174,13 +174,13 @@ public:
 
     // 删除结点key
     void deleteElement(K key) {
-        std::unique_lock<std::mutex> lock_;     // 自动加锁，等价于mtx.lock()
+        std::unique_lock<std::mutex> lock_(mtx);     // 自动加锁，等价于mtx.lock()
         
         std::shared_ptr<kv_node::Node<K, V>> current = this->head;
         auto update = kv_node::NodeVec<K, V>(max_level + 1);
 
         // 从最高层开始更新
-        for (int i = currentt_level; i >= 0; --i) {
+        for (int i = current_level; i >= 0; --i) {
             while (current->forward[i] != nullptr && current->forward[i]->getKey() < key) {
                 current = current->forward[i];
             }
@@ -190,15 +190,15 @@ public:
         current = current->forward[0];
         if (current != nullptr && current->getKey() == key) {
             // 从最低点开始删除结点
-            for (int i = 0; i <= currentt_level; ++i) {
+            for (int i = 0; i <= current_level; ++i) {
                 // 第 i 层已经没有待删除结点了直接退出
                 if (update[i]->forward[i] != current) break;
                 update[i]->forward[i] = current->forward[i];
             }
 
             // 删除没有元素的层
-            while (currentt_level > 0 && head->forward[currentt_level] == 0) {
-                --currentt_level;
+            while (current_level > 0 && head->forward[current_level] == 0) {
+                --current_level;
             }
 
             std::cout << "Successfully delete key " << key << std::endl;
@@ -212,7 +212,7 @@ public:
         std::shared_ptr<kv_node::Node<K, V>> current = head;
         bool res = false;
 
-        for (int i = currentt_level; i >= 0; --i) {
+        for (int i = current_level; i >= 0; --i) {
             while (current->forward[i] && current->forward[i]->getKey() < key) {
                 current = current->forward[i];
             }
@@ -233,7 +233,7 @@ public:
     void displayList() {
         std::cout << "\n************************* Skip List *************************\n";
 
-        for (int i = 0; i <= currentt_level; ++i) {
+        for (int i = 0; i <= current_level; ++i) {
             auto node = this->head->forward[i];
             std::cout << "Level " << i << ": ";
             while (node != nullptr) {

@@ -54,9 +54,9 @@ int main(int argc, char const* argv[]) {
         }
 
         auto finish = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = finish - start;
+        auto elapsed = std::chrono::duration<double>(finish - start);   // 单位是秒
 
-        std::cout << "insert elapsed:" << elapsed.count() << std::endl;
+        std::cout << "insert elapsed: " << elapsed.count() << " s" << std::endl;
         std::cout << "test insert element end."  << std::endl;
     }
 

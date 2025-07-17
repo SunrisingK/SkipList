@@ -2,13 +2,13 @@
 using namespace skip_list;
 
 int main(int argc, char const* argv[]) {
-    SkipList<int, std::string> skip_list_(14);
+    SkipList<int, std::string> skip_list_(10);
 
-    skip_list_.insertElement(1, "是徒为静养");
+    // skip_list_.insertElement(1, "是徒为静养");
     skip_list_.insertElement(3, "而不用克己工夫也");
-    skip_list_.insertElement(7, "如此");
-    skip_list_.insertElement(8, "临事便要倾倒");
-    skip_list_.insertElement(9, "人需在事上磨");
+    // skip_list_.insertElement(7, "如此");
+    // skip_list_.insertElement(8, "临事便要倾倒");
+    // skip_list_.insertElement(9, "人需在事上磨");
     skip_list_.insertElement(11, "事以秘成");
     skip_list_.insertElement(12, "尽人事知天命");
     skip_list_.insertElement(13, "憾无穷");
