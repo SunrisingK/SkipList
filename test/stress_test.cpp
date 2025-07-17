@@ -12,8 +12,8 @@ namespace {
 }
 
 int getRandomNumber(std::mt19937& gen) {
-    std::uniform_int_distribution<int> distrib(0, 99);
-    return distrib(gen);
+    std::uniform_int_distribution<int> distrib(0, 99);  // 生成0-99的随机整数
+    return distrib(gen);    // 利用传入的随机数生成器生成随机数
 }
 
 void testInsertElement(int tid, std::mt19937& gen) {
